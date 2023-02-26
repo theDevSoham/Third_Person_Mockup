@@ -515,6 +515,7 @@ MonoBehaviour:
   _playerY: 0
   gravityMultiplier: 1
   _jumpForce: 4
+  _sprintSpeed: 2
 --- !u!143 &2038009811
 CharacterController:
   m_ObjectHideFlags: 0

@@ -11,12 +11,12 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 _directionMove;
     readonly private float gravitation = -9.8f;
-    private float _sprintSpeed = 1.0f;
 
     [SerializeField] private float speed = 5.0f;
     [SerializeField] private float _playerY = 0.0f;
     [SerializeField] private float gravityMultiplier = 1.0f;
     [SerializeField] private float _jumpForce = 3.0f;
+    [SerializeField] private float _sprintSpeed = 2.0f;
 
 
     private void Awake()
@@ -29,7 +29,6 @@ public class PlayerMovement : MonoBehaviour
         actions.Enable();
         actions.Movement.Jump.started += OnJump;
         actions.Movement.Shoot.started += OnShoot;
-        actions.Movement.Sprint.started += OnSprint;
     }
 
     private void OnDisable()
@@ -37,7 +36,6 @@ public class PlayerMovement : MonoBehaviour
         actions.Disable();
         actions.Movement.Jump.started -= OnJump;
         actions.Movement.Shoot.started -= OnShoot;
-        actions.Movement.Sprint.started -= OnSprint;
     }
 
     private void Start()
@@ -55,10 +53,27 @@ public class PlayerMovement : MonoBehaviour
     private void MovePlayer()
     {
         Vector2 move = actions.Movement.Move.ReadValue<Vector2>();
-        _directionMove.x = move.x;
-        _directionMove.z = move.y;
 
-        _controller.Move(speed * _sprintSpeed * Time.deltaTime * _directionMove);
+        _directionMove.x = SprintTrigger(move.x);
+        _directionMove.z = SprintTrigger(move.y);
+
+        _controller.Move(speed * Time.deltaTime * _directionMove);
+    }
+
+    private float SprintTrigger(float movement)
+    {
+        if (!_controller.isGrounded) return movement; 
+
+        float sprintVal = actions.Movement.Sprint.ReadValue<float>();
+
+        if (sprintVal > 0)
+        {
+            return movement * _sprintSpeed;
+        }
+        else
+        {
+            return movement;
+        }
     }
 
     private void ApplyGravity()
@@ -86,11 +101,5 @@ public class PlayerMovement : MonoBehaviour
     public void OnShoot(InputAction.CallbackContext context)
     {
         print(context.action.IsPressed());
-    }
-
-    public void OnSprint(InputAction.CallbackContext context)
-    {
-        print("Started " + context.started);
-        print("Ended " + context.canceled);
     }
 }
