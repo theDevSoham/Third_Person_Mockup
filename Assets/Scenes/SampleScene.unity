@@ -511,6 +511,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ef7f1bec249fcb47a4d666d57e48a54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  speed: 3
+  _playerY: 0
+  gravityMultiplier: 1
+  _jumpForce: 4
 --- !u!143 &2038009811
 CharacterController:
   m_ObjectHideFlags: 0
