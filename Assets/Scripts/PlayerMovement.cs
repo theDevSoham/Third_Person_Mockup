@@ -11,12 +11,14 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 _directionMove;
     readonly private float gravitation = -9.8f;
+    private Transform mainCam;
 
     [SerializeField] private float speed = 5.0f;
     [SerializeField] private float _playerY = 0.0f;
     [SerializeField] private float gravityMultiplier = 1.0f;
     [SerializeField] private float _jumpForce = 3.0f;
     [SerializeField] private float _sprintSpeed = 2.0f;
+    [SerializeField] private float _rotationSpeed = 1.0f;
 
 
     private void Awake()
@@ -41,12 +43,14 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         _controller = GetComponent<CharacterController>();
+        mainCam = Camera.main.transform;
     }
 
     // Update is called once per frame
     void Update()
     {
         MovePlayer();
+        RotatePlayer();
         ApplyGravity();
     }
 
@@ -54,8 +58,8 @@ public class PlayerMovement : MonoBehaviour
     {
         Vector2 move = actions.Movement.Move.ReadValue<Vector2>();
 
-        _directionMove.x = SprintTrigger(move.x);
-        _directionMove.z = SprintTrigger(move.y);
+        _directionMove = SprintTrigger(move.x) * mainCam.right.normalized + SprintTrigger(move.y) * mainCam.forward.normalized;
+        _directionMove.y = _playerY;
 
         _controller.Move(speed * Time.deltaTime * _directionMove);
     }
@@ -76,6 +80,13 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private void RotatePlayer()
+    {
+        if (!actions.Movement.Move.IsInProgress()) return;
+        Quaternion targetAngle = Quaternion.Euler(new Vector3(0, mainCam.eulerAngles.y, 0));
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetAngle, _rotationSpeed);
+    }
+
     private void ApplyGravity()
     {
         if(_controller.isGrounded && _playerY < 0.0f)
@@ -86,8 +97,6 @@ public class PlayerMovement : MonoBehaviour
         {
             _playerY += gravitation * gravityMultiplier * Time.deltaTime;
         }
-
-        _directionMove.y = _playerY;
     }
 
     public void OnJump(InputAction.CallbackContext context)
