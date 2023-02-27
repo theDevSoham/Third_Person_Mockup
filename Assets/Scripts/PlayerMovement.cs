@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Cinemachine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
@@ -12,6 +14,10 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 _directionMove;
     readonly private float gravitation = -9.8f;
     private Transform mainCam;
+    public LayerMask hitLayer;
+    [SerializeField] private CinemachineVirtualCamera AimVCam;
+    [SerializeField] private Sprite[] crosshair;
+    [SerializeField] private Image render_Crosshair;
 
     [SerializeField] private float speed = 5.0f;
     [SerializeField] private float _playerY = 0.0f;
@@ -31,6 +37,8 @@ public class PlayerMovement : MonoBehaviour
         actions.Enable();
         actions.Movement.Jump.started += OnJump;
         actions.Movement.Shoot.started += OnShoot;
+        actions.Movement.Aim.performed += Aim;
+        actions.Movement.Aim.canceled += CancelAim;
     }
 
     private void OnDisable()
@@ -38,12 +46,19 @@ public class PlayerMovement : MonoBehaviour
         actions.Disable();
         actions.Movement.Jump.started -= OnJump;
         actions.Movement.Shoot.started -= OnShoot;
+        actions.Movement.Aim.performed -= Aim;
+        actions.Movement.Aim.canceled -= CancelAim;
     }
 
     private void Start()
     {
+        Cursor.lockState = CursorLockMode.Locked;
         _controller = GetComponent<CharacterController>();
         mainCam = Camera.main.transform;
+        if (crosshair[1] != null)
+        {
+            render_Crosshair.sprite = crosshair[1];
+        }
     }
 
     // Update is called once per frame
@@ -83,6 +98,11 @@ public class PlayerMovement : MonoBehaviour
     private void RotatePlayer()
     {
         if (!actions.Movement.Move.IsInProgress()) return;
+        RotationFunction();
+    }
+
+    private void RotationFunction()
+    {
         Quaternion targetAngle = Quaternion.Euler(new Vector3(0, mainCam.eulerAngles.y, 0));
         transform.rotation = Quaternion.Lerp(transform.rotation, targetAngle, _rotationSpeed);
     }
@@ -109,6 +129,30 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnShoot(InputAction.CallbackContext context)
     {
-        print(context.action.IsPressed());
+        //print(context.action.IsInProgress());
+
+        if (Physics.Raycast(mainCam.position, mainCam.forward, out RaycastHit hit, Mathf.Infinity, hitLayer))
+        {
+            print(hit.collider.gameObject.name);
+        }
+    }
+
+    public void Aim(InputAction.CallbackContext context)
+    {
+        AimVCam.Priority += 10;
+        if(crosshair[0] != null)
+        {
+            render_Crosshair.sprite = crosshair[0];
+        }
+        RotationFunction();
+    }
+
+    public void CancelAim(InputAction.CallbackContext context)
+    {
+        AimVCam.Priority -= 10;
+        if (crosshair[1] != null)
+        {
+            render_Crosshair.sprite = crosshair[1];
+        }
     }
 }
