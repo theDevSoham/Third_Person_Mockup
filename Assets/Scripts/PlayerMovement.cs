@@ -18,6 +18,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private CinemachineVirtualCamera AimVCam;
     [SerializeField] private Sprite[] crosshair;
     [SerializeField] private Image render_Crosshair;
+    [SerializeField] private GameObject bullet_hole;
 
     [SerializeField] private float speed = 5.0f;
     [SerializeField] private float _playerY = 0.0f;
@@ -133,7 +134,11 @@ public class PlayerMovement : MonoBehaviour
 
         if (Physics.Raycast(mainCam.position, mainCam.forward, out RaycastHit hit, Mathf.Infinity, hitLayer))
         {
-            print(hit.collider.gameObject.name);
+            print(hit.point);
+            Vector3 offset = new(0.1f, 0.1f, 0.1f);
+            GameObject bulletHoleObject = Instantiate(bullet_hole, hit.point, Quaternion.LookRotation(hit.normal), hit.collider.transform);
+            bulletHoleObject.transform.position += bulletHoleObject.transform.forward / 1000;
+            Destroy(bulletHoleObject, 2.0f);
         }
     }
 
