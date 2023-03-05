@@ -19,6 +19,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Sprite[] crosshair;
     [SerializeField] private Image render_Crosshair;
     [SerializeField] private GameObject bullet_hole;
+    [SerializeField] private Transform bullet_spawn;
+    [SerializeField] private TrailRenderer bullet_trail;
 
     [SerializeField] private float speed = 5.0f;
     [SerializeField] private float _playerY = 0.0f;
@@ -56,6 +58,7 @@ public class PlayerMovement : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         _controller = GetComponent<CharacterController>();
         mainCam = Camera.main.transform;
+        bullet_spawn = transform.GetChild(2).GetChild(0);
         if (crosshair[1] != null)
         {
             render_Crosshair.sprite = crosshair[1];
@@ -130,11 +133,13 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnShoot(InputAction.CallbackContext context)
     {
-        //print(context.action.IsInProgress());
+        TrailRenderer trail = Instantiate(bullet_trail, bullet_spawn.position, Quaternion.identity);
 
         if (Physics.Raycast(mainCam.position, mainCam.forward, out RaycastHit hit, Mathf.Infinity, hitLayer))
         {
-            print(hit.point);
+
+            StartCoroutine(SpawnBullet(trail, hit));
+
             Vector3 offset = new(0.1f, 0.1f, 0.1f);
             GameObject bulletHoleObject = Instantiate(bullet_hole, hit.point, Quaternion.LookRotation(hit.normal), hit.collider.transform);
             bulletHoleObject.transform.position += bulletHoleObject.transform.forward / 1000;
@@ -159,5 +164,21 @@ public class PlayerMovement : MonoBehaviour
         {
             render_Crosshair.sprite = crosshair[1];
         }
+    }
+
+    private IEnumerator SpawnBullet(TrailRenderer Trail, RaycastHit Hit)
+    {
+        float time = 0;
+
+        while(time < 1)
+        {
+            Trail.transform.position = Vector3.Lerp(Trail.transform.position, Hit.point, time);
+            time += Time.deltaTime / Trail.time;
+
+            yield return null;
+        }
+
+        Trail.transform.position = Hit.point;
+        Destroy(Trail.gameObject, Trail.time);
     }
 }
